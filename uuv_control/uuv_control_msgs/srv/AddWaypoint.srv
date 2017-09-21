@@ -16,4 +16,3 @@
 uuv_control_msgs/Waypoint waypoint
 ---
 bool success
-uuv_control_msgs/Waypoint[] waypoints
