@@ -41,7 +41,7 @@ class WaypointSet(object):
             msg += 'List of waypoints\n'
             msg += '================================\n'
             for i in range(self.num_waypoints):
-                msg += self.get_waypoint(i).__str__()                
+                msg += self.get_waypoint(i).__str__()
                 msg += '---\n'
             msg += 'Number of waypoints = %d\n' % self.num_waypoints
             msg += 'Number of valid waypoints = %d\n' % self.num_waypoints
@@ -115,6 +115,18 @@ class WaypointSet(object):
         if len(self._waypoints):
             return self._waypoints[-1]
         return None
+
+    def get_partial_set(self, idxs):
+        if len(idxs) == 0:
+            return None
+        wp_set = WaypointSet()
+        for i in idxs:
+            wp = self.get_waypoint(i)
+            if wp is None:
+                print 'Invalid waypoint index, i=', i
+                return None
+            wp_set.add_waypoint(wp)
+        return wp_set
 
     def remove_waypoint(self, waypoint):
         new_waypoints = list()

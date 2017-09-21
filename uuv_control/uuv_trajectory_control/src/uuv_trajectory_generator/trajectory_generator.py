@@ -56,13 +56,18 @@ class TrajectoryGenerator(object):
         self._wp_interp.stamped_pose_only = flag
 
     def is_using_stamped_pose_only(self):
-        return self._wp_interp.stamped_pose_only 
+        return self._wp_interp.stamped_pose_only
 
     def set_interp_method(self, method):
         return self._wp_interp.set_interpolation_method(method)
 
     def get_interp_method(self):
         return self._wp_interp.get_interpolation_method()
+
+    def get_remaining_waypoints(self):
+        if not self._wp_interp_on:
+            return None
+        return self._wp_interp.get_remaining_waypoints()
 
     def _reset(self):
         self._points = None
@@ -77,7 +82,7 @@ class TrajectoryGenerator(object):
         are currently in use, then sample the interpolated path and return the
         poses only.
         """
-        
+
         try:
             if self.points is None:
                 return None

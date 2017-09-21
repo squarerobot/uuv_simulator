@@ -136,6 +136,11 @@ class WPTrajectoryGenerator(object):
     def get_interpolation_method(self):
         return self._interp_method
 
+    def get_remaining_waypoints(self):
+        if not self._has_started:
+            return None
+        return self.interpolator.get_remaining_waypoints(self._cur_s)
+
     def set_interpolation_method(self, method):
         if method in self._path_generators:
             self._interp_method = method

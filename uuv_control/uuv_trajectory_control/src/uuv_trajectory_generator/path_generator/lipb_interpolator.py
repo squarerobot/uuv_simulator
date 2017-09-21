@@ -51,7 +51,7 @@ class LIPBInterpolator(PathGenerator):
 
         self._interp_fcns['pos'] = list()
         self._segment_to_wp_map = [0]
-        
+
         if self._waypoints.num_waypoints == 2:
             self._interp_fcns['pos'].append(
                 LineSegment(self._waypoints.get_waypoint(0).pos,
@@ -91,12 +91,12 @@ class LIPBInterpolator(PathGenerator):
                     q_start_line = deepcopy(q_seg[-1, :])
         else:
             return False
-        
+
         # Reparametrizing the curves
         lengths = [seg.get_length() for seg in self._interp_fcns['pos']]
         lengths = [0] + lengths
         self._s = np.cumsum(lengths) / np.sum(lengths)
-
+        print self._segment_to_wp_map
         mean_vel = np.mean(
             [self._waypoints.get_waypoint(k).max_forward_speed for k in range(self._waypoints.num_waypoints)])
         if self._duration is None:

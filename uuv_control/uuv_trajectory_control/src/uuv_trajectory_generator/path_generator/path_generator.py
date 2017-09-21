@@ -41,6 +41,7 @@ class PathGenerator(object):
         # The parametric variable to use as input for the interpolator
         self._s = list()
         self._segment_to_wp_map = list()
+        self._last_segment_idx = 0
         self._cur_s = 0
         self._s_step = 0.0001
 
@@ -119,6 +120,7 @@ class PathGenerator(object):
     def reset(self):
         self._s = list()
         self._segment_to_wp_map = list()
+        self._last_segment_idx = 0
         self._cur_s = 0
         self._s_step = 0.0001
 
@@ -146,6 +148,11 @@ class PathGenerator(object):
         except:
             print 'Invalid index'
             return None
+
+    def get_remaining_waypoints(self, s=None):
+        last_s = (s if s is not None else self._cur_s)
+        return self._waypoints.get_partial_set(
+            self.get_remaining_waypoints_idx(last_s))
 
     def is_full_dof(self):
         return self._is_full_dof
