@@ -60,18 +60,10 @@ if __name__ == '__main__':
 
     print 'Torque [N]=', torque
 
-    try:
-        rospy.wait_for_service('/gazebo/apply_body_wrench', timeout=10)
-    except rospy.ROSException:
-        print 'Service not available! Closing node...'
-        sys.exit(-1)
-
-    try:
-        apply_wrench = rospy.ServiceProxy('/gazebo/apply_body_wrench', ApplyBodyWrench)
-    except rospy.ServiceException, e:
-        print 'Service call failed, error=', e
-        sys.exit(-1)
-
+    rospy.wait_for_service('/gazebo/apply_body_wrench', timeout=10)
+        
+    apply_wrench = rospy.ServiceProxy('/gazebo/apply_body_wrench', ApplyBodyWrench)
+    
     ns = rospy.get_namespace().replace('/', '')
 
     body_name = '%s/base_link' % ns

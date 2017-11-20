@@ -65,18 +65,11 @@ if __name__ == '__main__':
         print 'Velocity limit must be positive'
         sys.exit(-1)
 
-    try:
-        rospy.wait_for_service('start_circular_trajectory', timeout=2)
-    except rospy.ROSException:
-        print 'Service not available! Closing node...'
-        sys.exit(-1)
-
-    try:
-        traj_gen = rospy.ServiceProxy('start_circular_trajectory', InitCircularTrajectory)
-    except rospy.ServiceException, e:
-        print 'Service call failed, error=', e
-        sys.exit(-1)
-
+    
+    rospy.wait_for_service('start_circular_trajectory', timeout=2)
+    
+    traj_gen = rospy.ServiceProxy('start_circular_trajectory', InitCircularTrajectory)
+    
     print 'Generating trajectory that starts at t=%fs' % start_time
 
     success = traj_gen(Time(rospy.Time(start_time)),

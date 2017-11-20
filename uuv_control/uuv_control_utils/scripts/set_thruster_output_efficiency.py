@@ -23,7 +23,7 @@ if __name__ == '__main__':
     rospy.init_node('set_thrusters_states')
 
     if rospy.is_shutdown():
-        rospy.ROSException('ROS master not running!')
+        raise rospy.ROSException('ROS master not running!')
 
     starting_time = 0.0
     if rospy.has_param('~starting_time'):
@@ -36,24 +36,24 @@ if __name__ == '__main__':
         duration = rospy.get_param('~duration')
 
     if duration == 0.0:
-        rospy.ROSException('Duration not set, leaving node...')
+        raise rospy.ROSException('Duration not set, leaving node...')
 
     print 'Duration [s]=', ('Inf.' if duration < 0 else duration)
 
     if rospy.has_param('~efficiency'):
         efficiency = rospy.get_param('~efficiency')
         if efficiency < 0 or efficiency > 1:
-            rospy.ROSException('Invalid thruster output efficiency, leaving node...')
+            raise rospy.ROSException('Invalid thruster output efficiency, leaving node...')
     else:
-        rospy.ROSException('Thruster output efficiency not set, leaving node...')
+        raise rospy.ROSException('Thruster output efficiency not set, leaving node...')
 
     if rospy.has_param('~thruster_id'):
         thruster_id = rospy.get_param('~thruster_id')
     else:
-        rospy.ROSException('Thruster ID not given')
+        raise rospy.ROSException('Thruster ID not given')
 
     if thruster_id < 0:
-        rospy.ROSException('Invalid thruster ID')
+        raise rospy.ROSException('Invalid thruster ID')
 
     print 'Setting thruster output efficiency #%d to %.2f' % (thruster_id, 100 * efficiency)
 
@@ -61,16 +61,10 @@ if __name__ == '__main__':
 
     srv_name = '/%s/thrusters/%d/set_thrust_force_efficiency' % (vehicle_name, thruster_id)
 
-    try:
-        rospy.wait_for_service(srv_name, timeout=2)
-    except rospy.ROSException:
-        rospy.ROSException('Service not available! Closing node...')
-
-    try:
-        set_eff = rospy.ServiceProxy(srv_name, SetThrusterEfficiency)
-    except rospy.ServiceException, e:
-        rospy.ROSException('Service call failed, error=' + e)
-
+    rospy.wait_for_service(srv_name, timeout=2)
+    
+    set_eff = rospy.ServiceProxy(srv_name, SetThrusterEfficiency)
+    
     rate = rospy.Rate(100)
     while rospy.get_time() < starting_time:
         rate.sleep()

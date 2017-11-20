@@ -45,18 +45,13 @@ if __name__ == '__main__':
     else:
         start_now = True
 
-    try:
-        rospy.wait_for_service('init_waypoints_from_file', timeout=2)
-    except rospy.ROSException:
-        rospy.ROSException('Service not available! Closing node...')
-
-    try:
-        init_wp = rospy.ServiceProxy(
-            'init_waypoints_from_file',
-            InitWaypointsFromFile)
-    except rospy.ServiceException, e:
-        rospy.ROSException('Service call failed, error=' + e)
-
+    
+    rospy.wait_for_service('init_waypoints_from_file', timeout=2)
+    
+    init_wp = rospy.ServiceProxy(
+        'init_waypoints_from_file',
+        InitWaypointsFromFile)
+    
     success = init_wp(Time(rospy.Time(start_time)),
                       start_now,
                       String(filename))

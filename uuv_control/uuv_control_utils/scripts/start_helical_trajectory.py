@@ -61,16 +61,10 @@ if __name__ == '__main__':
     if params['max_forward_speed'] <= 0:
         raise rospy.ROSException('Velocity limit must be positive')
 
-    try:
-        rospy.wait_for_service('start_helical_trajectory', timeout=2)
-    except rospy.ROSException:
-        raise rospy.ROSException('Service not available! Closing node...')
-
-    try:
-        traj_gen = rospy.ServiceProxy('start_helical_trajectory', InitHelicalTrajectory)
-    except rospy.ServiceException, e:
-        raise rospy.ROSException('Service call failed, error=' + e)
-
+    rospy.wait_for_service('start_helical_trajectory', timeout=2)
+    
+    traj_gen = rospy.ServiceProxy('start_helical_trajectory', InitHelicalTrajectory)
+    
     print 'Generating trajectory that starts at t=%fs' % start_time
 
     success = traj_gen(Time(rospy.Time(start_time)),

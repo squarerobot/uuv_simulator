@@ -23,7 +23,7 @@ if __name__ == '__main__':
     rospy.init_node('set_thrusters_states')
 
     if rospy.is_shutdown():
-        rospy.ROSException('ROS master not running!')
+        raise rospy.ROSException('ROS master not running!')
 
     starting_time = 0.0
     if rospy.has_param('~starting_time'):
@@ -36,22 +36,22 @@ if __name__ == '__main__':
         duration = rospy.get_param('~duration')
 
     if duration == 0.0:
-        rospy.ROSException('Duration not set, leaving node...')
+        raise rospy.ROSException('Duration not set, leaving node...')
 
     print 'Duration [s]=', ('Inf.' if duration < 0 else duration)
 
     if rospy.has_param('~is_on'):
         is_on = bool(rospy.get_param('~is_on'))
     else:
-        rospy.ROSException('State flag not provided')
+        raise rospy.ROSException('State flag not provided')
 
     if rospy.has_param('~thruster_id'):
         thruster_id = rospy.get_param('~thruster_id')
     else:
-        rospy.ROSException('Thruster ID not given')
+        raise rospy.ROSException('Thruster ID not given')
 
     if thruster_id < 0:
-        rospy.ROSException('Invalid thruster ID')
+        raise rospy.ROSException('Invalid thruster ID')
 
     print 'Setting state of thruster #%d as %s' % (thruster_id, 'ON' if is_on else 'OFF')
 
@@ -59,16 +59,11 @@ if __name__ == '__main__':
 
     srv_name = '/%s/thrusters/%d/set_thruster_state' % (vehicle_name, thruster_id)
 
-    try:
-        rospy.wait_for_service(srv_name, timeout=2)
-    except rospy.ROSException:
-        rospy.ROSException('Service not available! Closing node...')
-
-    try:
-        set_state = rospy.ServiceProxy(srv_name, SetThrusterState)
-    except rospy.ServiceException, e:
-        rospy.ROSException('Service call failed, error=' + e)
-
+    
+    rospy.wait_for_service(srv_name, timeout=2)
+    
+    set_state = rospy.ServiceProxy(srv_name, SetThrusterState)
+    
     rate = rospy.Rate(100)
     while rospy.get_time() < starting_time:
         rate.sleep()

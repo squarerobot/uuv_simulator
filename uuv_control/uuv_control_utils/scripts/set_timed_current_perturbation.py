@@ -64,18 +64,10 @@ if __name__ == '__main__':
 
     print 'Current vertical angle [deg]=', horz_angle * 180 / pi
 
-    try:
-        rospy.wait_for_service('/hydrodynamics/set_current_velocity', timeout=10)
-    except rospy.ROSException:
-        print 'Current velocity services not available! Closing node...'
-        sys.exit(-1)
-
-    try:
-        set_current = rospy.ServiceProxy('/hydrodynamics/set_current_velocity', SetCurrentVelocity)
-    except rospy.ServiceException, e:
-        print 'Service call failed, error=', e
-        sys.exit(-1)
-
+    rospy.wait_for_service('/hydrodynamics/set_current_velocity', timeout=10)
+        
+    set_current = rospy.ServiceProxy('/hydrodynamics/set_current_velocity', SetCurrentVelocity)
+    
     # Wait to set the current model
     rate = rospy.Rate(100)
     if rospy.get_time() < starting_time:
