@@ -73,7 +73,7 @@
       output="screen"/>
 
     <!-- Starting the Sliding Mode controller node -->
-    <node name="cartesian_controller" pkg="uuv_manipulators_control" type="SM_controller.py"
+    <node name="cartesian_controller" pkg="uuv_manipulators_control" type="sm_controller.py"
       respawn="false" output="screen">
       <remap from="cmd_vel" to="smc_vel_input"/>
       <rosparam subst_value="true">
@@ -92,6 +92,7 @@
             - 32.8
             - 41.0
             - 9.26
+          uuv_name: $(arg uuv_name)
       </rosparam>
     </node>
 
