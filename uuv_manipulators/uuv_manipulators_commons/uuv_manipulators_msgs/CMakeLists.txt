@@ -13,6 +13,7 @@ add_message_files(DIRECTORY msg FILES
   EndeffectorCommand.msg
   EndeffectorState.msg
   ArmConfigCommand.msg
+  ManDyn.msg
 )
 
 add_service_files(DIRECTORY srv FILES

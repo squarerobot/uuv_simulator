@@ -22,8 +22,8 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from uuv_gazebo_ros_plugins_msgs.srv import GetModelProperties
-from urdf_parser_py.urdf import URDF
-from kdl.kdl_parser import kdl_tree_from_urdf_model
+#from urdf_parser_py.urdf import URDF
+#from kdl.kdl_parser import kdl_tree_from_urdf_model
 
 import PyKDL
 from uuv_manipulators_control import CartesianController

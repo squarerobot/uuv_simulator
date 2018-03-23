@@ -72,6 +72,9 @@
     <node name="kinematics_service" pkg="uuv_manipulators_kinematics" type="kinematics_service.py"
       output="screen"/>
 
+    <!-- Initialize arm dynamics inertia and gravitation matrices -->
+    <include file="$(find oberon7_control)/launch/start_arm_dyn.launch"> </include>
+
     <!-- Starting the Sliding Mode controller node -->
     <node name="cartesian_controller" pkg="uuv_manipulators_control" type="sm_controller.py"
       respawn="false" output="screen">
