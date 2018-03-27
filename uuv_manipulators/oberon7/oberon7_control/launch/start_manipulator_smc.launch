@@ -73,7 +73,10 @@
       output="screen"/>
 
     <!-- Initialize arm dynamics inertia and gravitation matrices -->
-    <include file="$(find oberon7_control)/launch/start_arm_dyn.launch"> </include>
+    <include file="$(find oberon7_control)/launch/start_arm_dyn.launch">
+      <arg name="uuv_name" value="$(arg uuv_name)"/>
+      <arg name="arm_name" value="$(arg arm_name)"/>
+    </include>
 
     <!-- Starting the Sliding Mode controller node -->
     <node name="cartesian_controller" pkg="uuv_manipulators_control" type="sm_controller.py"

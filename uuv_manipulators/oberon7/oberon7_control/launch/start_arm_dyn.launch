@@ -1,5 +1,8 @@
 <launch>
 
+  <arg name="uuv_name" default=""/>
+  <arg name="arm_name" default="oberon7"/>
+
   <!-- Oberon7 Denavit-Hartenberg parameters and configuration -->
   <!-- l = (l0, l1, l2, l3, l4, l5) : (.18, .62, .25, .33, .22, .19) -->
   <!-- d = (0, 0, 0, l2+l3, 0, l4+l5) -->
@@ -13,19 +16,16 @@
   <!-- com_5 = sympy.matrix([0, 0, com4, 1]) -->
   <!-- com_6 = sympy.matrix([0, 0, com5-l5, 1]) -->
   <!-- com_i = (com_1, com_2, com_3, com_4, com_5, com) -->
-  <!-- m = (m1, m2, m3, m4, m5, m6) : (6.72, 12.44, 10.31, 8.55, 3.9, 3.46) -->
+  <!-- M = (m1, m2, m3, m4, m5, m6) : (6.72, 12.44, 10.31, 8.55, 3.9, 3.46) -->
+  <!-- js_offset : joint space configuration offset -->
+  <!-- js_sign : joint space configuration signal -->
 
   <!-- Starting the arm dynamics node -->
   <node name="arm_dyn" pkg="uuv_manipulators_control" type="arm_dyn.py"
     respawn="false" output="screen">
     <rosparam subst_value="true">
-        l:
-          - 0.18
-          - 0.62
-          - 0.25
-          - 0.33
-          - 0.22
-          - 0.19
+        uuv_name: $(arg uuv_name)
+        arm_name: $(arg arm_name)
         d:
           - 0
           - 0
@@ -72,13 +72,27 @@
           - 0
           - 0.61
           - 1
-        m:
+        M:
           - 6.72
           - 12.44
           - 10.31
           - 8.55
           - 3.9
           - 3.46
+        js_offset:
+          - 0
+          - 0
+          - 3.1415
+          - 3.1415
+          - 0
+          - 0
+        js_sign:
+          - 1
+          - -1
+          - -1
+          - 1
+          - -1
+          - 1
     </rosparam>
   </node>
 

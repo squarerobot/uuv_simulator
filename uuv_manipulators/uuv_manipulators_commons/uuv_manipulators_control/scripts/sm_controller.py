@@ -124,7 +124,6 @@ class SMC(CartesianController):
         M_q = 0
         for key in self._linkloads:
             M_q += self._arm_interface.jacobian_transpose(end_link=key) * self._linkinertias[key] * self._arm_interface.jacobian(end_link=key)
-        print '\n', 'inertia matrix: ', M_q, '\n'
 
         ########################################################################
         ########################################################################
