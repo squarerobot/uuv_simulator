@@ -1,0 +1,99 @@
+<launch>
+
+  <arg name="uuv_name" default=""/>
+  <arg name="arm_name" default="oberon7"/>
+
+  <!-- Oberon7 Denavit-Hartenberg parameters and configuration -->
+  <!-- l = (l0, l1, l2, l3, l4, l5) : (.18, .62, .25, .33, .22, .19) -->
+  <!-- d = (0, 0, 0, l2+l3, 0, l4+l5) -->
+  <!-- a = (l0, l1, 0, 0, 0, 0) -->
+  <!-- alpha = (-0.5*pi, 0, 0.5*pi, 0.5*pi, -0.5*pi, 0) -->
+  <!-- com = (com0, com1, com2, com3, com4, com5) : (.04, .31, .12, .16, .1, .8) -->
+  <!-- com_1 = sympy.matrix([com0-l0, 0, 0, 1]) -->
+  <!-- com_2 = sympy.matrix([com1-l1, 0, 0, 1]) -->
+  <!-- com_3 = sympy.matrix([0, 0, com2, 1]) -->
+  <!-- com_4 = sympy.matrix([0, com3-l3, 0, 1]) -->
+  <!-- com_5 = sympy.matrix([0, 0, com4, 1]) -->
+  <!-- com_6 = sympy.matrix([0, 0, com5-l5, 1]) -->
+  <!-- com_i = (com_1, com_2, com_3, com_4, com_5, com) -->
+  <!-- M = (m1, m2, m3, m4, m5, m6) : (6.72, 12.44, 10.31, 8.55, 3.9, 3.46) -->
+  <!-- js_offset : joint space configuration offset -->
+  <!-- js_sign : joint space configuration signal -->
+
+  <!-- Starting the arm dynamics node -->
+  <node name="arm_dyn" pkg="uuv_manipulators_control" type="arm_dyn.py"
+    respawn="false" output="screen">
+    <rosparam subst_value="true">
+        uuv_name: $(arg uuv_name)
+        arm_name: $(arg arm_name)
+        d:
+          - 0
+          - 0
+          - 0
+          - 0.58
+          - 0
+          - 0.41
+        a:
+          - 0.18
+          - 0.62
+          - 0
+          - 0
+          - 0
+          - 0
+        alpha:
+          - -1.5708
+          - 0
+          - 1.5708
+          - 1.5708
+          - -1.5708
+          - 0
+        com_i:
+          - -0.14
+          - 0
+          - 0
+          - 1
+          - -0.31
+          - 0
+          - 0
+          - 1
+          - 0
+          - 0
+          - 0.12
+          - 1
+          - 0
+          - -0.17
+          - 0
+          - 1
+          - 0
+          - 0
+          - 0.1
+          - 1
+          - 0
+          - 0
+          - 0.61
+          - 1
+        M:
+          - 6.72
+          - 12.44
+          - 10.31
+          - 8.55
+          - 3.9
+          - 3.46
+        js_offset:
+          - 0
+          - 0
+          - 3.1415
+          - 3.1415
+          - 0
+          - 0
+        js_sign:
+          - 1
+          - -1
+          - -1
+          - 1
+          - -1
+          - 1
+    </rosparam>
+  </node>
+
+</launch>

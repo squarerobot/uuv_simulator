@@ -32,4 +32,6 @@ catkin_install_python(PROGRAMS
       scripts/jt_cartesian_controller.py
       scripts/gripper_controller.py
       scripts/joint_position_controller.py
+      scripts/arm_dyn.py
+      scripts/sm_controller.py
       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
