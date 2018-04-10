@@ -83,7 +83,7 @@ class ArmDyn(object):
 
         self._joint_state = np.matrix(np.zeros(self._d_size)).T
         self._joint_sub = rospy.Subscriber("/"+self._uuv_name+"/joint_states", JointState, self._joint_callback)
-        self._dyn_pub = rospy.Publisher("/"+self._uuv_name+"/"+self._arm_name+"/ManDyn", ManDyn, queue_size=10)
+        self._dyn_pub = rospy.Publisher("/"+self._uuv_name+"/"+self._arm_name+"/"+"man_dyn", ManDyn, queue_size=10)
         self._rate = rospy.Rate(10)
         self._dynMsg = ManDyn()
 
@@ -93,12 +93,13 @@ class ArmDyn(object):
             for i in range(self._d_size):
                 dist_joint_state = self._joint_state
                 dist_joint_state[i] += self._delta_diff
-                P_sup = self._get_potential_energy(self._joint_state + self._delta_diff)
+                P_sup = self._get_potential_energy(dist_joint_state)
                 dist_joint_state = self._joint_state
                 dist_joint_state[i] -= self._delta_diff
-                P_inf = self._get_potential_energy(self._joint_state - self._delta_diff)
-                self._Gq[i] = (P_sup - P_inf) / (2 * self._delta_diff)
-                print 'Gq: ', self._Gq, '\n\n\n'
+                P_inf = self._get_potential_energy(dist_joint_state)
+                self._Gq[i] = np.abs((P_sup - P_inf) / (2 * self._delta_diff))
+            # Correct spikes in the gravitational matrix elements
+            print 'Gq inside arm_dyn: ', self._Gq[:], '\n\n\n'
             self._dynMsg.Vector6 = np.array(self._Gq[:])
             self._dyn_pub.publish(self._dynMsg)
             self._rate.sleep()

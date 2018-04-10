@@ -99,6 +99,7 @@
             - 41.0
             - 9.26
           uuv_name: $(arg uuv_name)
+          arm_name: $(arg arm_name)
       </rosparam>
     </node>
 

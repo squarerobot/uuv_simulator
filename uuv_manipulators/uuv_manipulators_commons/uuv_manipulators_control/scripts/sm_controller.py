@@ -22,6 +22,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from uuv_gazebo_ros_plugins_msgs.srv import GetModelProperties
+from uuv_manipulators_msgs.msg import ManDyn
 #from urdf_parser_py.urdf import URDF
 #from kdl.kdl_parser import kdl_tree_from_urdf_model
 
@@ -44,6 +45,7 @@ class SMC(CartesianController):
         Q_tag = '~Q'
         K_tag = '~K'
         uuv_name_tag = '~uuv_name'
+        arm_name_tag = '~arm_name'
         if not rospy.has_param(Q_tag):
             rospy.ROSException('Q gain matrix not available for tag=%s' % Q_tag)
         if not rospy.has_param(K_tag):
@@ -79,7 +81,12 @@ class SMC(CartesianController):
         self._k = rospy.get_param(K_tag)
         np.fill_diagonal(self._K, self._k * np.ones(6))
 
+        # Manipulator dynamic matrices (currently only gravitational matrix)
+        self._Gq = np.asmatrix(np.zeros(6)).T
+        # self._Mq = np.asmatrix(np.zeros(36)).T
+
         self._uuv_name = rospy.get_param(uuv_name_tag)
+        self._arm_name = rospy.get_param(arm_name_tag)
 
         self._last_time = rospy.get_time()
 
@@ -90,6 +97,10 @@ class SMC(CartesianController):
 
         # Subscriber to the joint states
         self._joint_sub = rospy.Subscriber("/"+self._uuv_name+"/joint_states", JointState, self._joint_callback)
+
+        # Topic that will receive the gravitational matrix of the manipulator
+        # obs: Inertia matrix currently not implemented here
+        self._mandyn_sub = rospy.Subscriber("/"+self._uuv_name+"/"+self._arm_name+"/"+"man_dyn", ManDyn, self._mandyn_callback)
 
         self._run()
 
@@ -124,6 +135,8 @@ class SMC(CartesianController):
         M_q = 0
         for key in self._linkloads:
             M_q += self._arm_interface.jacobian_transpose(end_link=key) * self._linkinertias[key] * self._arm_interface.jacobian(end_link=key)
+
+        #tau = M_q * (self._Q * np.tanh(self._T * s) + self._lambda * joint_error[6:] + qddot_cmd) + self._K * s - self._Gq
 
         ########################################################################
         ########################################################################
@@ -171,6 +184,11 @@ class SMC(CartesianController):
                 np.fill_diagonal(M, (I.m, I.m, I.m, I.ixx, I.iyy, I.izz))
                 self._linkloads[name] = np.matrix([0, 0, -I.m + B, 0, 0, 0]).T
                 self._linkinertias[name] = np.asmatrix(M)
+
+    def _mandyn_callback(self, mandyn):
+        self._Gq = np.asmatrix(mandyn.Vector6).T
+        # Inertia matrix currently not implemented here
+        # self._Mq = np.asmatrix(mandyn.Vector6x6).T
 
 if __name__ == '__main__':
     # Start the node
