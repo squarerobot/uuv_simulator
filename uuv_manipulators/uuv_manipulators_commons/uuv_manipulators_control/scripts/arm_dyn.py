@@ -77,7 +77,7 @@ class ArmDyn(object):
             self._com.append(np.transpose(np.matrix([com_i[4*i], com_i[4*i+1], com_i[4*i+2], com_i[4*i+3]])))
         self._com = self._com
         self._M = rospy.get_param(M_tag)
-        self._delta_diff = np.array([0.0001])
+        self._delta_diff = np.array([0.001])
         self._P = np.array(0)
         self._Gq = np.zeros((self._d_size,1))
 
@@ -97,9 +97,9 @@ class ArmDyn(object):
                 dist_joint_state = self._joint_state
                 dist_joint_state[i] -= self._delta_diff
                 P_inf = self._get_potential_energy(dist_joint_state)
-                self._Gq[i] = np.abs((P_sup - P_inf) / (2 * self._delta_diff))
+                self._Gq[i] = (P_sup - P_inf) / (2 * self._delta_diff)
             # Correct spikes in the gravitational matrix elements
-            print 'Gq inside arm_dyn: ', self._Gq[:], '\n\n\n'
+            #print 'Gq inside arm_dyn: ', self._Gq[:], '\n\n\n'
             self._dynMsg.Vector6 = np.array(self._Gq[:])
             self._dyn_pub.publish(self._dynMsg)
             self._rate.sleep()

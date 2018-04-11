@@ -111,36 +111,42 @@ class SMC(CartesianController):
 
         # Calculate the goal pose
         goal = self._get_goal()
-        # Calculate velocity reference in joint coordinates
-        time_step = rospy.get_time() - self._last_time
-        self._last_time = rospy.get_time()
-        goal_p_dot = (goal.p - self._last_goal.p) / time_step
-        goal_vel = np.array([goal_p_dot[0], goal_p_dot[1], goal_p_dot[2], 0, 0, 0])
-        J_inv = self._arm_interface.jacobian_pseudo_inverse()
-        qdot_cmd = J_inv * np.asmatrix(goal_vel).T
-        # Calculate the joints goal
-        joint_goal = np.matrix(np.append(self._arm_interface.inverse_kinematics(goal.p, goal.M.GetQuaternion()), qdot_cmd)).T
-        if joint_goal.item(0) is None:
-            joint_goal = self._last_joint_goal
-        else:
-            self._last_joint_goal = joint_goal
-        # Calculate acceleration reference in joint coordinates
-        qddot_cmd = (joint_goal[6:] - self._last_qdot_cmd) / time_step
-        self._last_qdot_cmd = joint_goal[6:]
-        # Calculate the joints error
-        joint_error = joint_goal - self._joint_state
-        # Calculate sliding Variable
-        s = self._lambda * joint_error[:6] + joint_error[6:]
-        # Calculate inertia matrix
+
+        # ##################################
+        # ### Sliding mode joint control ###
+        # ##################################
+        #
+        # # Calculate velocity reference in joint coordinates
+        # time_step = rospy.get_time() - self._last_time
+        # self._last_time = rospy.get_time()
+        # goal_p_dot = (goal.p - self._last_goal.p) / time_step
+        # goal_vel = np.array([goal_p_dot[0], goal_p_dot[1], goal_p_dot[2], 0, 0, 0])
+        # J_inv = self._arm_interface.jacobian_pseudo_inverse()
+        # qdot_cmd = J_inv * np.asmatrix(goal_vel).T
+        # # Calculate the joints goal
+        # joint_goal = np.matrix(np.append(self._arm_interface.inverse_kinematics(goal.p, goal.M.GetQuaternion()), qdot_cmd)).T
+        # if joint_goal.item(0) is None:
+        #     joint_goal = self._last_joint_goal
+        # else:
+        #     self._last_joint_goal = joint_goal
+        # # Calculate acceleration reference in joint coordinates
+        # qddot_cmd = (joint_goal[6:] - self._last_qdot_cmd) / time_step
+        # self._last_qdot_cmd = joint_goal[6:]
+        # # Calculate the joints error
+        # joint_error = joint_goal - self._joint_state
+        # # Calculate sliding Variable
+        # s = self._lambda * joint_error[:6] + joint_error[6:]
+        # # Calculate inertia matrix
         M_q = 0
         for key in self._linkloads:
             M_q += self._arm_interface.jacobian_transpose(end_link=key) * self._linkinertias[key] * self._arm_interface.jacobian(end_link=key)
+        # tau1 = M_q * (self._Q * np.tanh(self._T * s) + self._lambda * joint_error[6:] + qddot_cmd) + self._K * s - self._Gq
+        # tau1 = (np.diagflat([[20000,20000,20000,10000,100,0]]) * joint_error[:6] + np.diagflat([[0,0,0,0,0,0]]) * joint_error[6:])
 
-        #tau = M_q * (self._Q * np.tanh(self._T * s) + self._lambda * joint_error[6:] + qddot_cmd) + self._K * s - self._Gq
-
-        ########################################################################
-        ########################################################################
-
+        # ############################################
+        # ### Jacobian transpose cartesian control ###
+        # ############################################
+        #
         # End-effector's pose
         ee_pose = self._arm_interface.get_ee_pose_as_frame()
         # End-effector's velocity
@@ -157,11 +163,42 @@ class SMC(CartesianController):
         JT = self._arm_interface.jacobian_transpose()
         # Calculate the torques for the joints
         tau = JT * wrench
+
+        #####################################tau2#
+        ### Sliding mode cartesian control ###
+        ######################################
+
+        # Calculate velocity reference
+        time_step = rospy.get_time() - self._last_time
+        self._last_time = rospy.get_time()
+        goal_p_dot = (goal.p - self._last_goal.p) / time_step
+        goal_vel = np.array([goal_p_dot[0], goal_p_dot[1], goal_p_dot[2], 0, 0, 0])
+        # End-effector's pose
+        ee_pose = self._arm_interface.get_ee_pose_as_frame()
+        # End-effector's velocity
+        ee_vel = self._arm_interface.get_ee_vel_as_kdl_twist()
+        # Calculate pose error
+        error_pos = PyKDL.diff(ee_pose, goal)
+        error_pose = np.array([error_pos[0], error_pos[1], error_pos[2], error_pos[3], error_pos[4], error_pos[5]]).reshape((6,1))
+        # Calculate velocity error
+        ee_velo = np.array([ee_vel[0], ee_vel[1], ee_vel[2], ee_vel[3], ee_vel[5], ee_vel[5]])
+        error_velo = (goal_vel - ee_velo).reshape((6,1))
+
+        # Calculate sliding Variable
+        _lambda = np.diagflat([[35000,35000,35000,450,450,450]])
+        s = np.dot(_lambda, error_pose) + error_velo
+
+        _k = np.diagflat([[1,1,1,1,1,1]])
+        tau2 = JT * (np.dot(_k, s) + self._Gq)
+        print 'tau2: ', tau2, '\n'
+        print 'Gq: ', JT * self._Gq, '\n'
+        print 'Mq: ', np.diagonal(M_q), '\n'
+        print 'PD: ', JT * np.dot(_k, s), '\n'
         # Store current pose target
         self._last_goal = goal
 
         self.publish_goal()
-        self.publish_joint_efforts(tau)
+        self.publish_joint_efforts(tau2)
 
     # Get joint state of manipulator arm from azimuth to wrist
     def _joint_callback(self, joint_state):
