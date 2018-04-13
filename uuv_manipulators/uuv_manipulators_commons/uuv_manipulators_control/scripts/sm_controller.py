@@ -23,8 +23,6 @@ from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from uuv_gazebo_ros_plugins_msgs.srv import GetModelProperties
 from uuv_manipulators_msgs.msg import ManDyn
-#from urdf_parser_py.urdf import URDF
-#from kdl.kdl_parser import kdl_tree_from_urdf_model
 
 import PyKDL
 from uuv_manipulators_control import CartesianController
@@ -115,58 +113,6 @@ class SMC(CartesianController):
         # Calculate the goal pose
         goal = self._get_goal()
 
-        # ##################################
-        # ### Sliding mode joint control ###
-        # ##################################
-        #
-        # # Calculate velocity reference in joint coordinates
-        # time_step = rospy.get_time() - self._last_time
-        # self._last_time = rospy.get_time()
-        # goal_p_dot = (goal.p - self._last_goal.p) / time_step
-        # goal_vel = np.array([goal_p_dot[0], goal_p_dot[1], goal_p_dot[2], 0, 0, 0])
-        # J_inv = self._arm_interface.jacobian_pseudo_inverse()
-        # qdot_cmd = J_inv * np.asmatrix(goal_vel).T
-        # # Calculate the joints goal
-        # joint_goal = np.matrix(np.append(self._arm_interface.inverse_kinematics(goal.p, goal.M.GetQuaternion()), qdot_cmd)).T
-        # if joint_goal.item(0) is None:
-        #     joint_goal = self._last_joint_goal
-        # else:
-        #     self._last_joint_goal = joint_goal
-        # # Calculate acceleration reference in joint coordinates
-        # qddot_cmd = (joint_goal[6:] - self._last_qdot_cmd) / time_step
-        # self._last_qdot_cmd = joint_goal[6:]
-        # # Calculate the joints error
-        # joint_error = joint_goal - self._joint_state
-        # # Calculate sliding Variable
-        # s = self._lambda * joint_error[:6] + joint_error[6:]
-        # # Calculate inertia matrix
-        # Mq = 0
-        # for key in self._linkloads:
-        #     Mq += self._arm_interface.jacobian_transpose(end_link=key) * self._linkinertias[key] * self._arm_interface.jacobian(end_link=key)
-        # tau1 = Mq * (self._Q * np.tanh(self._T * s) + self._lambda * joint_error[6:] + qddot_cmd) + self._K * s - self._Gq
-        # tau1 = (np.diagflat([[20000,20000,20000,10000,100,0]]) * joint_error[:6] + np.diagflat([[0,0,0,0,0,0]]) * joint_error[6:])
-
-        # ############################################
-        # ### Jacobian transpose cartesian control ###
-        # ############################################
-        #
-        # End-effector's pose
-        ee_pose = self._arm_interface.get_ee_pose_as_frame()
-        # End-effector's velocity
-        ee_vel = self._arm_interface.get_ee_vel_as_kdl_twist()
-        # Calculate pose error
-        error = PyKDL.diff(goal, ee_pose)
-        # End-effector wrench to achieve target
-        wrench = np.matrix(np.zeros(6)).T
-        for i in range(len(wrench)):
-            wrench[i] = -(10000 * error[i] + 0 * ee_vel[i])
-            #wrench[i] = -(self._Kp[i] * error[i] + self._Kd[i] * ee_vel[i])
-
-        # Compute jacobian transpose
-        JT = self._arm_interface.jacobian_transpose()
-        # Calculate the torques for the joints
-        tau = JT * wrench
-
         ######################################
         ### Sliding mode cartesian control ###
         ######################################
@@ -202,6 +148,7 @@ class SMC(CartesianController):
         Mq = 0
         for key in self._linkloads:
             Mq += self._arm_interface.jacobian_transpose(end_link=key) * self._linkinertias[key] * self._arm_interface.jacobian(end_link=key)
+
         # Use masses different from the ones of the real vehicle to test !!!!
         # Wrenches - Inertial term
         _Q = np.diagflat([[10,10,10,10,10,10]])
@@ -212,17 +159,16 @@ class SMC(CartesianController):
         tau_pd = np.dot(_k, s)
         # Wrenches - Gravitational term
         tau_gq = self._Gq
+        # Compute jacobian transpose
+        JT = self._arm_interface.jacobian_transpose()
         # Total wrench for sliding mode controller
-        # tau3 = JT * (tau_inertia + tau_pd + tau_gq)
-        tau3 = JT * (tau_inertia + tau_pd)
-        print 'tau3: ', tau3, '\n'
-        print 'Gq: ', JT * self._Gq, '\n'
+        tau = JT * (tau_inertia + tau_pd + tau_gq)
 
         # Store current pose target
         self._last_goal = goal
 
         self.publish_goal()
-        self.publish_joint_efforts(tau3)
+        self.publish_joint_efforts(tau)
 
     # Get joint state of manipulator arm from azimuth to wrist
     def _joint_callback(self, joint_state):
