@@ -24,10 +24,11 @@ from sensor_msgs.msg import JointState
 
 class ArmDyn(object):
     """
-    Arm dynamics Gravitational matrix
+    Manipulator arm dynamic matrices
+    obs: currently computing only the gravitational matrix
     """
 
-    LABEL = 'Arm dynamics Gravitational matrix'
+    LABEL = 'Manipulator arm dynamic matrices'
 
     g = 9.81
 
@@ -65,6 +66,7 @@ class ArmDyn(object):
         self._uuv_name = rospy.get_param(uuv_name_tag)
         self._arm_name = rospy.get_param(arm_name_tag)
 
+        # Denavit Hartenberg configuration parameters
         self._d = rospy.get_param(d_tag)
         self._a = rospy.get_param(a_tag)
         self._alpha = rospy.get_param(alpha_tag)
@@ -76,16 +78,26 @@ class ArmDyn(object):
         for i in range(self._d_size):
             self._com.append(np.transpose(np.matrix([com_i[4*i], com_i[4*i+1], com_i[4*i+2], com_i[4*i+3]])))
         self._com = self._com
+        # Inertia matrix
         self._M = rospy.get_param(M_tag)
+        # Differential interval for the gradient calculation
         self._delta_diff = np.array([0.001])
+        # Manipulators potential energy
         self._P = np.array(0)
+        # Manipulators gravitational matrix
         self._Gq = np.zeros((self._d_size,1))
+        # Last step manipulators gravitational matrix
         self._Gq_last = np.zeros((self._d_size,1))
 
+        # State of the manipulator joints
         self._joint_state = np.matrix(np.zeros(self._d_size)).T
+        # Subscriber for the state of the manipulator joints
         self._joint_sub = rospy.Subscriber("/"+self._uuv_name+"/joint_states", JointState, self._joint_callback)
+        # Publisher for the arm dynamic matrices
         self._dyn_pub = rospy.Publisher("/"+self._uuv_name+"/"+self._arm_name+"/"+"man_dyn", ManDyn, queue_size=10)
+
         self._rate = rospy.Rate(100)
+
         self._dynMsg = ManDyn()
 
     def pub_dyn(self):
@@ -100,13 +112,14 @@ class ArmDyn(object):
                 P_inf = self._get_potential_energy(dist_joint_state)
                 self._Gq[i] = (P_sup - P_inf) / (2 * self._delta_diff)
                 # Outliers detection and elimination
-                if rospy.get_time() > 10:
+                if rospy.get_time() > 1:
                     if np.abs(self._Gq[i] - self._Gq_last[i]) > 5:
                         self._Gq[i] = self._Gq_last[i]
                     if abs(self._Gq[i]) < 0.1:
                         self._Gq[i] = 0
                 self._Gq_last[i] = self._Gq[i]
-            self._dynMsg.Vector6 = np.array(self._Gq[:])
+            # Composing and publishing the dynamic matrices message
+            self._dynMsg.gravitational = np.array(self._Gq[:])
             self._dyn_pub.publish(self._dynMsg)
             self._rate.sleep()
 
@@ -127,12 +140,14 @@ class ArmDyn(object):
         return self._P
 
     def _t_dh(self, theta, d, a, alpha):
+        # Compute the Denavit Hartenberg matrix
         return np.matrix([[np.cos(theta), -np.sin(theta)*np.cos(alpha), np.sin(theta)*np.sin(alpha), a*np.cos(theta)],
                 [np.sin(theta), np.cos(theta)*np.cos(alpha), -np.cos(theta)*np.sin(alpha), a*np.sin(theta)],
                 [0, np.sin(alpha), np.cos(alpha), d],
                 [0, 0, 0, 1]])
 
     def _joint_callback(self, joint_state):
+        # Get manipulator joint states
         self._joint_state = np.matrix(joint_state.position[1:self._d_size+1]).T
         for i in range(self._d_size):
             self._joint_state[i] = self._js_offset[i] + self._js_sign[i] * self._joint_state[i]

@@ -23,6 +23,7 @@ from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from uuv_gazebo_ros_plugins_msgs.srv import GetModelProperties
 from uuv_manipulators_msgs.msg import ManDyn
+from geometry_msgs.msg import PoseStamped
 
 import PyKDL
 from uuv_manipulators_control import CartesianController
@@ -30,10 +31,10 @@ from uuv_manipulators_control import CartesianController
 
 class SMC(CartesianController):
     """
-    Joint space Sliding Mode controller
+    Cartesian space Sliding Mode controller
     """
 
-    LABEL = 'Joint space Sliding Mode controller'
+    LABEL = 'Cartesian space Sliding Mode controller'
     def __init__(self):
         """
         Class constructor
@@ -42,66 +43,66 @@ class SMC(CartesianController):
         # Retrieve the controller parameters from the parameter server
         Q_tag = '~Q'
         K_tag = '~K'
+        lambda_tag = '~Lambda'
+        T_tag = '~T'
         uuv_name_tag = '~uuv_name'
         arm_name_tag = '~arm_name'
+        semi_autonom = '~semi_autonom'
         if not rospy.has_param(Q_tag):
             rospy.ROSException('Q gain matrix not available for tag=%s' % Q_tag)
         if not rospy.has_param(K_tag):
             rospy.ROSException('K gain matrix not available for tag=%s' % K_tag)
+        if not rospy.has_param(lambda_tag):
+            rospy.ROSException('Lambda gain matrix not available for tag=%s' % lambda_tag)
+        if not rospy.has_param(T_tag):
+            rospy.ROSException('T gain matrix not available for tag=%s' % T_tag)
         if not rospy.has_param(uuv_name_tag):
-            rospy.ROSException('K gain matrix not available for tag=%s' % uuv_name_tag)
-
-        self._last_joint_goal = np.matrix([0, 0.5*np.pi, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).T
-
-        # Current joint position and velocity states
-        self._joint_state = np.matrix([np.zeros(12)]).T
-
-        # Last velocity reference in joint coordinates
-        self._last_qdot_cmd = np.asmatrix(np.zeros(6)).T
+            rospy.ROSException('uuv name not available for tag=%s' % uuv_name_tag)
+        if not rospy.has_param(arm_name_tag):
+            rospy.ROSException('arm name not available for tag=%s' % arm_name_tag)
+        if not rospy.has_param(semi_autonom):
+            rospy.ROSException('semi-autonomous selection not available for tag=%s' % semi_autonom)
 
         # Last velocity reference in cartesian coordinates
         self._last_goal_vel = np.asmatrix(np.zeros(6)).T
 
+        # Initialization flag, to wait the end-effector get to the home position
+        self._is_init = False
+
         # Initialization of Sliding Variables
-        self._I = np.zeros((6,6))
-        np.fill_diagonal(self._I, np.ones(6))
-        self._I = np.asmatrix(self._I)
+        # Sliding surface slope
+        self._lambda = np.diagflat([rospy.get_param(lambda_tag)])
+        # Robustness term multiplier
+        self._Q = np.diagflat([rospy.get_param(Q_tag)])
+        # PD multiplier
+        self._K = np.diagflat([rospy.get_param(K_tag)])
+        # hyperbolic tangent slope
+        self._T = np.diagflat([rospy.get_param(T_tag)])
 
-        self._lambda = self._I
-        np.fill_diagonal(self._lambda, 1 * np.ones(6))
-
-        self._T = self._I
-        t = [.2, .2, .2, .2, .2, .2]
-        np.fill_diagonal(self._T, np.divide(1.0, t) * np.ones(6))
-
-        self._Q = self._I
-        self._q = rospy.get_param(Q_tag)
-        np.fill_diagonal(self._Q, self._q * np.ones(6))
-
-        self._K = self._I
-        self._k = rospy.get_param(K_tag)
-        np.fill_diagonal(self._K, self._k * np.ones(6))
-
-        # Manipulator dynamic matrices (currently only gravitational matrix)
+        # Gravitational matrix
         self._Gq = np.asmatrix(np.zeros(6)).T
-        # self._Mq = np.asmatrix(np.zeros(36)).T
 
         self._uuv_name = rospy.get_param(uuv_name_tag)
         self._arm_name = rospy.get_param(arm_name_tag)
 
-        self._last_time = rospy.get_time()
+        # Operation mode (not autonomous / semi-autonomous)
+        if rospy.get_param(semi_autonom):
+            self._semi_autonom = 1
+        else:
+            self._semi_autonom = 0
 
-        # Initialization flag, to wait the end-effector get to the home position
-        self._is_init = False
+        # Semi-autonomous manipulator goal
+        self._goal_semi_autonom = PoseStamped()
+
+        self._last_time = rospy.get_time()
 
         self._update_model_props()
 
-        # Subscriber to the joint states
-        self._joint_sub = rospy.Subscriber("/"+self._uuv_name+"/joint_states", JointState, self._joint_callback)
-
-        # Topic that will receive the gravitational matrix of the manipulator
-        # obs: Inertia matrix currently not implemented here
+        # Topic that receives the gravitational matrix of the manipulator
         self._mandyn_sub = rospy.Subscriber("/"+self._uuv_name+"/"+self._arm_name+"/"+"man_dyn", ManDyn, self._mandyn_callback)
+
+        # Topic that receives the semi-autonomous manipulator goal
+        self._semi_autonom_goal_sub = rospy.Subscriber("/"+self._uuv_name+"/"+self._arm_name+"/"+"goal_semi_autonom", PoseStamped, self._semi_autonom_goal_callback)
 
         self._run()
 
@@ -111,7 +112,19 @@ class SMC(CartesianController):
             return
 
         # Calculate the goal pose
-        goal = self._get_goal()
+        if self._semi_autonom and self._goal_semi_autonom:
+            # goal.p[0] = self._goal_semi_autonom.pose.position.x
+            # goal.p[1] = self._goal_semi_autonom.pose.position.y
+            # goal.p[2] = self._goal_semi_autonom.pose.position.z
+            goal_p_x = self._goal_semi_autonom.pose.position.x
+            goal_p_y = self._goal_semi_autonom.pose.position.y
+            goal_p_z = self._goal_semi_autonom.pose.position.z
+            goal_p = PyKDL.Vector(goal_p_x, goal_p_y, goal_p_z)
+            # goal.M = PyKDL.Rotation.Quaternion(self._goal_semi_autonom.pose.orientation.x, self._goal_semi_autonom.pose.orientation.y, self._goal_semi_autonom.pose.orientation.z, self._goal_semi_autonom.pose.orientation.w)
+            goal_M = PyKDL.Rotation.Quaternion(self._goal_semi_autonom.pose.orientation.x, self._goal_semi_autonom.pose.orientation.y, self._goal_semi_autonom.pose.orientation.z, self._goal_semi_autonom.pose.orientation.w)
+            goal = PyKDL.Frame(goal_M, goal_p)
+        else:
+            goal = self._get_goal()
 
         ######################################
         ### Sliding mode cartesian control ###
@@ -136,8 +149,7 @@ class SMC(CartesianController):
         ee_velo = np.array([ee_vel[0], ee_vel[1], ee_vel[2], ee_vel[3], ee_vel[5], ee_vel[5]])
         error_velo = (goal_vel - ee_velo).reshape((6,1))
         # Calculate sliding Variable
-        _lambda = np.diagflat([[100,100,100,4.5,4.5,4.5]])
-        s = np.dot(_lambda, error_pose) + error_velo
+        s = np.dot(self._lambda, error_pose) + error_velo
         # Calculate reference acceleration
         if time_step > 0:
             goal_acc = (goal_vel - self._last_goal_vel) / time_step
@@ -151,12 +163,9 @@ class SMC(CartesianController):
 
         # Use masses different from the ones of the real vehicle to test !!!!
         # Wrenches - Inertial term
-        _Q = np.diagflat([[10,10,10,10,10,10]])
-        _T = np.diagflat([[0.2,0.2,0.2,0.2,0.2,0.2]])
-        tau_inertia = np.dot(Mq, np.asmatrix(goal_acc).T + np.dot(_lambda, error_velo) + np.dot(_Q, np.tanh(np.dot(_T, s))))
+        tau_inertia = np.dot(Mq, np.asmatrix(goal_acc).T + np.dot(self._lambda, error_velo) + np.dot(self._Q, np.tanh(np.dot(self._T, s))))
         # Wrenches - PD term
-        _k = np.diagflat([[350,350,350,100,100,100]])
-        tau_pd = np.dot(_k, s)
+        tau_pd = np.dot(self._K, s)
         # Wrenches - Gravitational term
         tau_gq = self._Gq
         # Compute jacobian transpose
@@ -164,15 +173,13 @@ class SMC(CartesianController):
         # Total wrench for sliding mode controller
         tau = JT * (tau_inertia + tau_pd + tau_gq)
 
-        # Store current pose target
-        self._last_goal = goal
-
-        self.publish_goal()
         self.publish_joint_efforts(tau)
 
-    # Get joint state of manipulator arm from azimuth to wrist
-    def _joint_callback(self, joint_state):
-        self._joint_state = np.matrix([joint_state.position[1:7] + joint_state.velocity[1:7]]).T
+        # Store current pose target
+        # if not (self._semi_autonom and self._goal_semi_autonom):
+        if not (self._semi_autonom and self._goal_semi_autonom):
+            self._last_goal = goal
+            self.publish_goal()
 
     # Update model properties
     def _update_model_props(self):
@@ -193,9 +200,10 @@ class SMC(CartesianController):
                 self._linkinertias[name] = np.asmatrix(M)
 
     def _mandyn_callback(self, mandyn):
-        self._Gq = np.asmatrix(mandyn.Vector6).T
-        # Inertia matrix currently not implemented here
-        # self._Mq = np.asmatrix(mandyn.Vector6x6).T
+        self._Gq = np.asmatrix(mandyn.gravitational).T
+
+    def _semi_autonom_goal_callback(self, semi_autonom_goal):
+        self._goal_semi_autonom = semi_autonom_goal
 
 if __name__ == '__main__':
     # Start the node

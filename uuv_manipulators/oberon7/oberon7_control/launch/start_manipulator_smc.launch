@@ -1,6 +1,7 @@
 <launch>
   <arg name="uuv_name" default=""/>
   <arg name="arm_name" default="oberon7"/>
+  <arg name="semi_autonom" default="0"/>
   <!-- Default joystick mapping set for the XBox 360 controller -->
   <arg name="exclusion_button" default="4"/>
   <arg name="deadman_button" default="5"/>
@@ -85,21 +86,36 @@
       <rosparam subst_value="true">
           publish_rate: 50
           Q:
-            - 8.74
-            - 0.16
-            - 6.45
-            - 3.07
-            - 9.26
-            - 4.22
+            - 10.0
+            - 10.0
+            - 10.0
+            - 10.0
+            - 10.0
+            - 10.0
           K:
-            - 28.61
-            - 37.46
-            - 46.79
-            - 32.8
-            - 41.0
-            - 9.26
+            - 350.0
+            - 350.0
+            - 350.0
+            - 100.0
+            - 100.0
+            - 100.0
+          Lambda:
+            - 100.0
+            - 100.0
+            - 100.0
+            - 4.5
+            - 4.5
+            - 4.5
+          T:
+            - 0.2
+            - 0.2
+            - 0.2
+            - 0.2
+            - 0.2
+            - 0.2
           uuv_name: $(arg uuv_name)
           arm_name: $(arg arm_name)
+          semi_autonom : $(arg semi_autonom)
       </rosparam>
     </node>
 
