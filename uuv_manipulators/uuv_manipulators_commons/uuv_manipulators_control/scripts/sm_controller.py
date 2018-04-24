@@ -146,7 +146,7 @@ class SMC(CartesianController):
         error_pos = PyKDL.diff(ee_pose, goal)
         error_pose = np.array([error_pos[0], error_pos[1], error_pos[2], error_pos[3], error_pos[4], error_pos[5]]).reshape((6,1))
         # Calculate velocity error
-        ee_velo = np.array([ee_vel[0], ee_vel[1], ee_vel[2], ee_vel[3], ee_vel[5], ee_vel[5]])
+        ee_velo = np.array([ee_vel[0], ee_vel[1], ee_vel[2], ee_vel[3], ee_vel[4], ee_vel[5]])
         error_velo = (goal_vel - ee_velo).reshape((6,1))
         # Calculate sliding Variable
         s = np.dot(self._lambda, error_pose) + error_velo

@@ -255,7 +255,6 @@
             <child link="${namespace}/wrist_link"/>
             <origin xyz="0 0 0.31595760629823427" rpy="${-0.5*PI} ${-0.5*PI} 0"/>
             <axis xyz="0 0 1"/>
-            <!-- <dynamics damping="50" friction="200"/> -->
             <dynamics damping="10" friction="10"/>
             <!-- <limit lower="${-90 * d2r}" upper="${90 * d2r}" velocity=".26" effort="200"/> -->
             <limit lower="${-90 * d2r}" upper="${90 * d2r}" velocity=".3" effort="50"/>
