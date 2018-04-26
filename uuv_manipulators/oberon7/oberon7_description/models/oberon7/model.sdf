@@ -559,19 +559,22 @@
         <surface>
           <contact>
             <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
               <kp>1e+06</kp>
-              <kd>1</kd>
-              <min_depth>0.001</min_depth>
+              <kd>0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.1</min_depth>
             </ode>
           </contact>
           <friction>
             <ode>
-              <mu>1</mu>
-              <mu2>1</mu2>
+              <mu>0.2</mu>
+              <mu2>0.2</mu2>
             </ode>
           </friction>
         </surface>
-        <max_contacts>3</max_contacts>
+        <max_contacts>4</max_contacts>
       </collision>
       <visual name='/finger_tip_left_visual'>
         <pose frame=''>0 0 0 0 -0 0</pose>
@@ -715,19 +718,22 @@
         <surface>
           <contact>
             <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
               <kp>1e+06</kp>
-              <kd>1</kd>
-              <min_depth>0.001</min_depth>
+              <kd>0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.1</min_depth>
             </ode>
           </contact>
           <friction>
             <ode>
-              <mu>1</mu>
-              <mu2>1</mu2>
+              <mu>0.2</mu>
+              <mu2>0.2</mu2>
             </ode>
           </friction>
         </surface>
-        <max_contacts>3</max_contacts>
+        <max_contacts>4</max_contacts>
       </collision>
       <visual name='/finger_tip_right_visual'>
         <pose frame=''>0 0 0 0 -0 0</pose>
