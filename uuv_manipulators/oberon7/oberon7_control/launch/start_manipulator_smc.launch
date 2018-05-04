@@ -46,7 +46,7 @@
       <rosparam subst_value="true">
         type: twist
         deadman_button: $(arg deadman_button)
-        exclusion_buttons: [$(arg exclusion_button)]
+        exclusion_buttons: [$(arg exclusion_butto# goal.M = PyKDL.Rotation.RPY(0, goal.M.GetRPY()[1], goal.M.GetRPY()[2])n)]
         mapping:
           x:
             axis: $(arg axis_x)

@@ -46,8 +46,8 @@
               deadman_button: $(arg deadman_button)
               open_button: $(arg open_button)
               close_button: $(arg close_button)
-              kp: 200
-              ki: 4
+              kp: 90
+              ki: 0
               kd: 1
             </rosparam>
       </node>
