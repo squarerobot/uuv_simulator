@@ -69,12 +69,12 @@
       </physics>
     </joint>
 
-    <!-- Valve 1 - April tag -->
+    <!-- Valve 1 - Aruco tag -->
 
-    <link name="april_tag_valve_1">
+    <link name="aruco_tag_valve_1">
       <!-- <pose>3.31813 0.000387 8.33784 0 0 0</pose> -->
       <pose>3.31813 -0.43 8.13 0 0 0</pose>
-      <collision name="april_tag_valve_1_collision">
+      <collision name="aruco_tag_valve_1_collision">
         <pose>0 0 0 0 1.57 0</pose>
         <geometry>
             <box>
@@ -83,7 +83,7 @@
         </geometry>
       </collision>
 
-      <visual name="april_tag_valve_1_visual">
+      <visual name="aruco_tag_valve_1_visual">
         <pose>0.0 0.0 0.0 0 1.57 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -102,7 +102,7 @@
 
     <joint name="marker_1_joint" type="fixed">
       <parent>block</parent>
-      <child>april_tag_valve_1</child>
+      <child>aruco_tag_valve_1</child>
     </joint>
 
     <!-- Valve 1 -->
@@ -166,12 +166,12 @@
       </axis>
     </joint>
 
-    <!-- Valve 2 - April tag -->
+    <!-- Valve 2 - Aruco tag -->
 
-    <link name="april_tag_valve_2">
+    <link name="aruco_tag_valve_2">
       <!-- <pose>3.31813 0.000668 7.94273 0 0 0</pose> -->
       <pose>3.31813 -0.43 7.77 0 0 0</pose>
-      <collision name="april_tag_valve_2_collision">
+      <collision name="aruco_tag_valve_2_collision">
         <pose>0 0 0 0 1.57 0</pose>
         <geometry>
             <box>
@@ -180,7 +180,7 @@
         </geometry>
       </collision>
 
-      <visual name="april_tag_valve_2_visual">
+      <visual name="aruco_tag_valve_2_visual">
         <pose>0 0 0 0 1.57 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -199,7 +199,7 @@
 
     <joint name="marker_2_joint" type="fixed">
       <parent>block</parent>
-      <child>april_tag_valve_2</child>
+      <child>aruco_tag_valve_2</child>
       <pose>0 0 0 0 0 0</pose>
     </joint>
 
@@ -264,12 +264,12 @@
       </axis>
     </joint>
 
-    <!-- Valve 3 - April tag -->
+    <!-- Valve 3 - Aruco tag -->
 
-    <link name="april_tag_valve_3">
+    <link name="aruco_tag_valve_3">
       <!-- <pose>3.31813 0.000668 7.59716 0 0 0</pose> -->
       <pose>3.31813 -0.43 7.34 0 0 0</pose>
-      <collision name="april_tag_valve_3_collision">
+      <collision name="aruco_tag_valve_3_collision">
         <pose>0 0 0 0 1.57 0</pose>
         <geometry>
             <box>
@@ -278,7 +278,7 @@
         </geometry>
       </collision>
 
-      <visual name="april_tag_valve_3_visual">
+      <visual name="aruco_tag_valve_3_visual">
         <pose>0 0 0 0 1.57 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -297,7 +297,7 @@
 
     <joint name="marker_3_joint" type="fixed">
       <parent>block</parent>
-      <child>april_tag_valve_3</child>
+      <child>aruco_tag_valve_3</child>
       <pose>0 0 0 0 0 0</pose>
     </joint>
 
@@ -362,12 +362,12 @@
       </axis>
     </joint>
 
-    <!-- Valve 4 - April tag -->
+    <!-- Valve 4 - Aruco tag -->
 
-    <link name="april_tag_valve_4">
+    <link name="aruco_tag_valve_4">
       <!-- <pose>3.31813 0.000668 7.24173 0 0 0</pose> -->
       <pose>3.31813 -0.43 6.98 0 0 0</pose>
-      <collision name="april_tag_valve_4_collision">
+      <collision name="aruco_tag_valve_4_collision">
         <geometry>
             <box>
               <size>0.14 0.14 0.001</size>
@@ -375,7 +375,7 @@
         </geometry>
       </collision>
 
-      <visual name="april_tag_valve_4_visual">
+      <visual name="aruco_tag_valve_4_visual">
         <pose>0 0 0 0 1.57 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -394,7 +394,7 @@
 
     <joint name="marker_4_joint" type="fixed">
       <parent>block</parent>
-      <child>april_tag_valve_4</child>
+      <child>aruco_tag_valve_4</child>
       <pose>0 0 0 0 0 0</pose>
     </joint>
 
@@ -459,12 +459,12 @@
       </axis>
     </joint>
 
-    <!-- Valve 5 - April tag -->
+    <!-- Valve 5 - Aruco tag -->
 
-    <link name="april_tag_valve_5">
+    <link name="aruco_tag_valve_5">
       <!-- <pose>3.31813 0.000387 6.88629 0 0 0</pose> -->
       <pose>3.31813 -0.43 6.63 0 0 0</pose>
-      <collision name="april_tag_valve_5_collision">
+      <collision name="aruco_tag_valve_5_collision">
         <geometry>
             <box>
               <size>0.14 0.14 0.001</size>
@@ -472,7 +472,7 @@
         </geometry>
       </collision>
 
-      <visual name="april_tag_valve_5_visual">
+      <visual name="aruco_tag_valve_5_visual">
         <pose>0 0 0 0 1.57 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -491,7 +491,7 @@
 
     <joint name="marker_5_joint" type="fixed">
       <parent>block</parent>
-      <child>april_tag_valve_5</child>
+      <child>aruco_tag_valve_5</child>
       <pose>0 0 0 0 0 0</pose>
     </joint>
 
