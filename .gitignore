@@ -15,6 +15,7 @@ logs/
 .catkin_tools
 .cproject
 .project
+.autotools
 
 # Misc
 .clang_complete

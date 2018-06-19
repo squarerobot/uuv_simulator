@@ -75,6 +75,12 @@ void UnderwaterCameraROSPlugin::Load(sensors::SensorPtr _sensor,
   this->background[1] = (unsigned char)0;
   this->background[2] = (unsigned char)0;
 
+  if (_sdf->HasElement("stddev"))
+    stdDev_=_sdf->GetElement("stddev")->Get<double>();
+  else
+    stdDev_ = 1.00;
+  std::cout<<stdDev_;
+
   if (_sdf->HasElement("backgroundR"))
     this->background[0] = (unsigned char)_sdf->GetElement(
       "backgroundR")->Get<int>();
@@ -211,6 +217,9 @@ void UnderwaterCameraROSPlugin::SimulateUnderwater(const cv::Mat& _inputImage,
         // Response Function).
         float e = std::exp(-r*attenuation[c]);
         out[c] = e*in[c] + (1.0f-e)*background[c];
+        boost::normal_distribution<> nd(out[c], stdDev_);
+        boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > nor(rng_, nd);
+        out[c]=nor();
       }
     }
   }
@@ -241,7 +250,10 @@ void UnderwaterCameraROSPlugin::SimulateUnderwaterBW(const cv::Mat& _inputImage,
         // for now (it would be better to use a proper Radiometric
         // Response Function).
         float e = std::exp(-r*attenuation[0]);
-        out[0] = e*in[0] + (1.0f-e)*background[0];
+        out[0] = e*in[0] + (1.0f-e)*(background[0]+background[1]+background[2])/3.000000;
+        boost::normal_distribution<> nd(out[0], stdDev_);
+        boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > nor(rng_, nd);
+        out[0]=nor();
     }
   }
 }

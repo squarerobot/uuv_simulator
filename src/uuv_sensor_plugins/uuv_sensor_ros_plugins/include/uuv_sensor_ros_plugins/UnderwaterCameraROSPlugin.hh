@@ -23,6 +23,7 @@
 #include <gazebo_plugins/gazebo_ros_camera_utils.h>
 #include <uuv_sensor_ros_plugins/Common.hh>
 #include <opencv2/opencv.hpp>
+#include <boost/random.hpp>
 
 namespace gazebo
 {
@@ -74,6 +75,12 @@ namespace gazebo
 
     /// \brief Background constants per channel (RGB)
     protected: unsigned char background[3];
+
+    /// \brief Mersenne Twister RNG for noise
+    protected: boost::mt19937 rng_;
+
+    /// \brief Standard deviation for Gaussian noise model
+    protected: double stdDev_;
   };
 }
 
