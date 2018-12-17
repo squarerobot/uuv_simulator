@@ -64,7 +64,6 @@ catkin_package(
     ${OGRE_Paging_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
-  DEPENDS Eigen3 gazebo
   CATKIN_DEPENDS
     uuv_gazebo_plugins
     sensor_msgs
